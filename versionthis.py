@@ -25,9 +25,15 @@ class SyncherException(Exception): pass
 
 # ls -lde Desktop/ | tail +2 | sed 's/^ [0-9]*: //'; echo
 
+def dryfunc(dry, func, *kw):
+    if dry:
+        logging.info("dry calling %s %s" % (func.__name__, kw))
+    else:
+        return func(kw)
+
 def getacl(f):
     cmd = "ls -lde %s  | tail +2 | sed 's/^ [0-9]*: //'" % f
-    out = getPipedCommandOut(cmd, options.dry)
+    out = dryfunc(options.dry, getPipedCommandOut,cmd)
     logging.debug("acl: %s = %s" % (cmd, out))
     if out: out = out.strip()
     return out
@@ -73,7 +79,7 @@ def versionthis(repospath, filetoversion):
         if len(acl) > 0:
             logging.info("removing acl %s from %s" % (acl, filetoversion))
             cmd = "chmod -N %s" % filetoversion
-            getCommandOut(cmd, options.dry)
+            dryfunc(options.dry, getCommandOut, cmd)
         else:
             acl = None
         
@@ -87,7 +93,7 @@ def versionthis(repospath, filetoversion):
 
     if acl is not None:
         logging.info("putting acl %s back to %s" % (acl, repospathofversionedfile))
-        getCommandOut("echo %s | chmod -E %s" % (acl, repospathofversionedfile), options.dry)
+        dryfunc(options.dry, getCommandOut, "echo %s | chmod -E %s" % (acl, repospathofversionedfile))
     
     
     logging.info("creating symlink from %s to %s", repospathofversionedfile, filetoversionpath)
@@ -95,7 +101,7 @@ def versionthis(repospath, filetoversion):
         os.symlink(repospathofversionedfile, filetoversionpath)
     
     cmd = "svn add %s/* --force" % options.repository    
-    out = getCommandOut(cmd, options.dry)
+    out = dryfunc(options.dry, getCommandOut, cmd)
     logging.info("RESULTS of %s : %s" % (cmd, out))
     
     with open(os.path.join(repospath, SYNCHER_DB_FILENAME), 'a') as db:
