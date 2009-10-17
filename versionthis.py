@@ -33,7 +33,7 @@ def dryfunc(dry, func, *kw):
 
 def getacl(f):
     cmd = "ls -lde %s  | tail +2 | sed 's/^ [0-9]*: //'" % f
-    out = dryfunc(options.dry, getPipedCommandOut,cmd)
+    out = dryfunc(False, getPipedCommandOut,cmd)
     logging.debug("acl: %s = %s" % (cmd, out))
     if out: out = out.strip()
     return out
