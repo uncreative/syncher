@@ -87,15 +87,15 @@ def versionthis(repospath, filetoversion):
 
     if acl is not None:
         logging.info("putting acl %s back to %s" % (acl, repospathofversionedfile))
-        dryfunc(options.dry, getCommandOut, "echo %s | chmod -E %s" % (acl, repospathofversionedfile))
+        dryfunc(options.dry, getPipedCommandOut, "echo %s | chmod -E %s" % (acl, repospathofversionedfile))
     
     
     logging.info("creating symlink from %s to %s", repospathofversionedfile, filetoversionpath)
     if not options.dry:
         os.symlink(repospathofversionedfile, filetoversionpath)
     
-
-
+    
+    
     cmd = "svn add %s/* --force" % options.repository    
     out = dryfunc(options.dry, getCommandOut, cmd)
     logging.info("RESULTS of %s : %s" % (cmd, out))
@@ -126,9 +126,16 @@ def readoptions(argv):
         options.repository = os.environ.get("SYNCHER_REPOSITORY")
     
     if options.repository is None:
-        raise Exception("You must set an environment variable SYNCHER_REPOSITORY to path of syncher or use -r to specify the repository path")
+        raise SyncherException("You must set an environment variable SYNCHER_REPOSITORY to path of syncher or use -r to specify the repository path")
+    else:
+        cmd = "svn info %s" % options.repository
+        out = dryfunc(False, getCommandOut, cmd)
+        if out.find("not a working copy") >= 0:
+            raise SyncherException("%s must be added to some svn repository: %s" % options.repository, out)
+        
+    
     if len(args) < 1:
-        raise Exception("You must supply one or more files to version")	
+        raise SyncherException("You must supply one or more files to version")	
     
     return options, args
     
