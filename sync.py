@@ -12,7 +12,7 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 import sys, os, shutil
 import logging
 from optparse import OptionParser
-from externalprocess import getCommandOut
+from externalprocess import getCommandOut, getPipedCommandOut, dryfunc
 
 SYNCHER_REPOSITORY = "SYNCHER_REPOSITORY"
 SYNCHER_DB_FILENAME = "syncher.db"
@@ -31,10 +31,10 @@ def sync(repospath, comment = ""):
 		    logging.info("synching", reposfilepath + line, line)		    
 		    if not options.dry:
 		        cmd = "svn st %s | grep ^\! | gawk '{ print $2 }' | xargs svn del" % reposfilepath + line
-		        out = getCommandOut(cmd, options)
+		        out = dryfunc(options.dry, getPipedCommandOut, cmd)
 			    logging.debug(out)
 			    cmd = "svn ci %s -m \"sync %s\"" % (reposfilepath + line, comment)
-			    out = getCommandOut(cmd, options)
+			    out = dryfunc(options.dry, getCommandOut, cmd)
 			    
 
 def readoptions(argv):
