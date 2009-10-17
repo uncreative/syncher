@@ -10,7 +10,7 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 import sys, os, shutil
 import logging
 from optparse import OptionParser
-from externalprocess import getCommandOut, getPipedCommandOut
+from externalprocess import getCommandOut, getPipedCommandOut, dryfunc
 
 SYNCHER_REPOSITORY = "SYNCHER_REPOSITORY"
 SYNCHER_DB_FILENAME = "syncher.db"
@@ -25,11 +25,6 @@ class SyncherException(Exception): pass
 
 # ls -lde Desktop/ | tail +2 | sed 's/^ [0-9]*: //'; echo
 
-def dryfunc(dry, func, *kw):
-    if dry:
-        logging.info("dry calling %s %s" % (func.__name__, kw))
-    else:
-        return func(kw)
 
 def getacl(f):
     cmd = "ls -lde %s  | tail +2 | sed 's/^ [0-9]*: //'" % f
@@ -45,7 +40,6 @@ def hasacl(f):
     return False
 
 def versionthis(repospath, filetoversion):
-    prevacl = None
     if hasacl(filetoversion) and not options.ignoreacl:
         err = "filetoversion has a 'deny' in ACL permissions (ls -lde %s: %s) \n \
         This program is currently not clever enough to check if you have permission to move/delete this file. \n \
@@ -100,6 +94,8 @@ def versionthis(repospath, filetoversion):
     if not options.dry:
         os.symlink(repospathofversionedfile, filetoversionpath)
     
+
+
     cmd = "svn add %s/* --force" % options.repository    
     out = dryfunc(options.dry, getCommandOut, cmd)
     logging.info("RESULTS of %s : %s" % (cmd, out))
