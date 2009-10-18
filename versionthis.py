@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-symlinkrepos.py
+versionthis.py
 
 Created by uncreative on 2009-09-06.
 Copyright (c) 2009 __MyCompanyName__. All rights reserved.
