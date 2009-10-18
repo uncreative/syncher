@@ -33,4 +33,5 @@ def deleteinreposonly(f):
     cmd = "svn del --force --keep-local \"%s\"" % f
     out = dryfunc(settings.dry, getPipedCommandOut, cmd)
     logging.info("RESULTS of %s : %s" % (cmd, out))
+    undo.push(add, f)
     
