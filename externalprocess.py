@@ -6,12 +6,6 @@ import os
 class CommandRunError(Exception): pass
 
 
-
-def dryfunc(dry, func, *kw):
-    if dry:
-        logging.info("dry calling %s %s" % (func.__name__, kw))
-    else:
-        return func(*kw)    
         
 def getCommandOut(cmd):
     """
