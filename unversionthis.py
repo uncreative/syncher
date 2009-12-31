@@ -44,7 +44,7 @@ def unversionthis(filetoversion):
         
         filetoversionpath, repospathofversionedfile, repospathtoputnewfilein = settings.getFileToVersionPathes(filetoversion)
         
-        util.remove(filetoversionpath)
+        syncdb.remove(filetoversionpath)
         
         if subversion.isinsvn(repospathofversionedfile):
             subversion.deleteinreposonly(repospathofversionedfile)
@@ -56,8 +56,7 @@ def unversionthis(filetoversion):
                     raise SyncherException("repository will be messed up if we don't commit removal svn for this path")
             if os.path.isdir(repospathofversionedfile):
                 logging.info("deleting .svn files in %s" % repospathofversionedfile)
-                dryfunc(options.dry, getCommandOut, "find \"%s\" -name .svn -exec rm -rf \"{}\"" % repospathofversionedfile)
-        
+                dryfunc(options.dry, getPipedCommandOut, "find \"%s\" -name .svn -exec rm -rf \"{}\" \\;" % repospathofversionedfile)
         
         util.removesymlink(filetoversionpath)
         
