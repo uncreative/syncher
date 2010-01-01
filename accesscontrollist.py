@@ -2,6 +2,7 @@ import logging
 from util import dryfunc, SyncherException
 from externalprocess import getCommandOut, getPipedCommandOut
 import settings
+import undo
 
 def getacl(f):
     cmd = "ls -lde \"%s\"  | tail +2 | sed 's/^ [0-9]*: //'" % f

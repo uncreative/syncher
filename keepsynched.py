@@ -47,7 +47,7 @@ def versionthis(filetoversion):
     
         acl = None
         if options.ignoreacl:
-            acl = removeacl(filetoversion)
+            acl = accesscontrollist.removeacl(filetoversion)
         
         util.move(filetoversionpath, repospathofversionedfile)#repospathtoputnewfilein)
 
