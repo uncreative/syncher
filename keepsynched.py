@@ -10,12 +10,12 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 import sys, os
 import logging
 from externalprocess import getCommandOut, getPipedCommandOut
-from util import dryfunc, SyncherException
+import settings
 import util
+from util import dryfunc, SyncherException
 import accesscontrollist
 import syncdb
 import undo
-import settings
 
 
 """
