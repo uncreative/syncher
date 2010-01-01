@@ -10,6 +10,10 @@ Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 import sys, os, shutil
 import logging
 from optparse import OptionParser
+#from util import dryfunc, SyncherException
+import settings
+import undo
+import util
 
 SYNCHER_REPOSITORY = "SYNCHER_REPOSITORY"
 SYNCHER_DB_FILENAME = "syncher.db"
@@ -19,37 +23,31 @@ SYNCHER_DB_FILENAME = "syncher.db"
 
 
 def makesymlinks(repospath):
-	reposfilepath = os.path.abspath(repospath)
-	with open(os.path.join(repospath, SYNCHER_DB_FILENAME)) as db:
-		for line in db:
-		    logging.info("creating symlink from %s to %s", reposfilepath + line, line)		    
-		    if not options.dry:
-			    os.symlink(reposfilepath + line, line)
-
-def readoptions(argv):
-    usage = '''usage: %prog [options] path-to-version'''
-    parser = OptionParser(usage=usage)
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=True, help="make lots of noise [default]")
-    parser.add_option("-q", "--quiet", action="store_false", dest="verbose", help="be vewwy quiet (I'm hunting wabbits)")
-    parser.add_option("-r", "--repository", dest="repository", metavar="PATH", help="PATH of syncher repository (can be specified in SYNCHER_REPOSITORY environment variable instead)")
-    parser.add_option("--dry", dest="dry", action="store_true", default=False, help="do no harm")
-    options, args = parser.parse_args(argv)
-
-    if options.verbose:
-        loglevel = logging.DEBUG
-    else:
-        loglevel = logging.WARNING
-
-    logging.basicConfig(level=loglevel)
-
-    if not parser.has_option('--repository'):
-        options.repository = os.environ.get("SYNCHER_REPOSITORY")
-    if options.repository is None:
-        raise Exception("You must set an environment variable SYNCHER_REPOSITORY to path of syncher or use -r to specify the repository path")
-    if len(args) < 1:
-        raise Exception("You must supply one or more files to version")	
-
-    return options, args
+    reposfilepath = os.path.abspath(repospath)
+    with open(os.path.join(repospath, SYNCHER_DB_FILENAME)) as db:
+        try:
+            for line in db:
+                line = line.strip()
+                if not os.path.islink(line):
+                    logging.info("creating symlink from %s to %s", reposfilepath + line, line)
+                    if not options.dry:
+                        if os.path.exists(line):
+                            acl = None
+                            if options.ignoreacl:
+                                acl = removeacl(line)
+                            util.move(line, line+".beforesyncher")#repospathtoputnewfilein)
+                            if acl is not None:
+                                accesscontrollist.setacl(line, acl)
+                        elif not os.path.exists(os.path.dirname(line)):
+                            created = util.makedirs(os.path.dirname(line))
+                        util.symlink(reposfilepath + line, line)
+                else:
+                    if not os.path.realpath(line) == reposfilepath + line:
+                        logging.warn("%s is already a symbolic link to %s not %s. it will not be followed and linked properly to repository" % (line, os.path.realpath(line), reposfilepath + line))
+        except Exception as e:
+            logging.warn("ROLLING BACK because of %s" % e)
+            undo.rollback()
+            raise
 
 def main(argv=None):
     global options
@@ -57,7 +55,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-	options, args = readoptions(argv)
+	options, args = settings.readoptions(argv, False)
 	makesymlinks(options.repository)
 
 

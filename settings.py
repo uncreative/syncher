@@ -1,6 +1,7 @@
 import os
 import logging
 from optparse import OptionParser
+from util import SyncherException
 
 dry = False
 repospath = None
@@ -17,7 +18,7 @@ def getFileToVersionPathes(filetoversion):
     repospathtoputnewfilein = os.path.join(repospath, os.path.dirname(filetoversionpath)[1:])
     return filetoversionpath, repospathofversionedfile, repospathtoputnewfilein
  
-def readoptions(argv):
+def readoptions(argv, filearg=True):
     global dry, repospath, reposfilepath, syncdbpath
     
     usage = '''usage: %prog [options] path-to-version'''
@@ -44,7 +45,7 @@ def readoptions(argv):
         raise SyncherException("You must set an environment variable SYNCHER_REPOSITORY to path of syncher or use -r to specify the repository path")
 
 
-    if len(args) < 1:
+    if filearg and len(args) < 1:
         raise SyncherException("You must supply one or more files to version")	
 
     dry = options.dry
