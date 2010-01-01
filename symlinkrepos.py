@@ -14,6 +14,7 @@ from optparse import OptionParser
 import settings
 import undo
 import util
+import accesscontrollist
 
 SYNCHER_REPOSITORY = "SYNCHER_REPOSITORY"
 SYNCHER_DB_FILENAME = "syncher.db"
@@ -28,19 +29,27 @@ def makesymlinks(repospath):
         try:
             for line in db:
                 line = line.strip()
-                if not os.path.islink(line):
-                    logging.info("creating symlink from %s to %s", reposfilepath + line, line)
+                if not os.path.islink(line) and accesscontrollist.hasacl(line) and not options.ignoreacl:
+                    err = "filetoversion has a 'deny' in ACL permissions (ls -lde %s: %s) \n \
+                    This program is currently not clever enough to check if you have permission to move/delete this file. \n \
+                    To avoid this problem remove deny permissions from the access control entries \n \
+                    or rerun this command with --ignoreacl" % (line, accesscontrollist.getacl(line))
+                    logging.warn(err)
+
+                elif not os.path.islink(line):
+                    acl = None
                     if not options.dry:
+                        logging.info("creating symlink from %s to %s", reposfilepath + line, line)
                         if os.path.exists(line):
-                            acl = None
                             if options.ignoreacl:
-                                acl = removeacl(line)
-                            util.move(line, line+".beforesyncher")#repospathtoputnewfilein)
-                            if acl is not None:
-                                accesscontrollist.setacl(line, acl)
+                                acl = accesscontrollist.removeacl(line)
+                            util.move(line, line+"-beforesyncher")#repospathtoputnewfilein)
                         elif not os.path.exists(os.path.dirname(line)):
                             created = util.makedirs(os.path.dirname(line))
+
                         util.symlink(reposfilepath + line, line)
+                        if acl is not None:
+                            accesscontrollist.setacl(line, acl)
                 else:
                     if not os.path.realpath(line) == reposfilepath + line:
                         logging.warn("%s is already a symbolic link to %s not %s. it will not be followed and linked properly to repository" % (line, os.path.realpath(line), reposfilepath + line))
