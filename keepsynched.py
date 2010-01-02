@@ -43,7 +43,7 @@ def versionthis(filetoversion):
         
         filetoversionpath, repospathofversionedfile, repospathtoputnewfilein = settings.getFileToVersionPathes(filetoversion)
         
-        created = util.makedirs(repospathtoputnewfilein)
+        util.makedirs(repospathtoputnewfilein)
     
         acl = None
         if options.ignoreacl:

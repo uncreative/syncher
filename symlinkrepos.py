@@ -45,7 +45,7 @@ def makesymlinks(repospath):
                                 acl = accesscontrollist.removeacl(line)
                             util.move(line, line+"-beforesyncher")#repospathtoputnewfilein)
                         elif not os.path.exists(os.path.dirname(line)):
-                            created = util.makedirs(os.path.dirname(line))
+                            util.makedirs(os.path.dirname(line))
 
                         util.symlink(reposfilepath + line, line)
                         if acl is not None:

@@ -43,40 +43,23 @@ def makedirs(name, mode=0777):
     logging.info("making directories: %s", name)
     if not settings.dry:
         try:
-            created = makedirshelper(name, mode)
-            undo.push(os.removedirs, created)
-            return created
+            made = None
+            dirs = []
+            #dir = os.path.basename(name)
+            dirname, basename = os.path.split(name)
+            if basename == '': # if there was a / at the end of the pathname ie: /usr/local/bin/ as opposed to /usr/local/bin
+                dirname, basename = os.path.split(dirname)
+
+            while(basename != '' and not os.path.exists(os.path.join(dirname, basename))):
+                dirs.append(os.path.join(dirname, basename))
+                dirname, basename = os.path.split(dirname)
+
+            while(len(dirs) > 0):
+                makethis = dirs.pop()
+                os.mkdir(makethis , mode)
+                undo.push(os.removedirs, makethis)
+
         except OSError, err:
             print repr(err)
-            if err.errno == 17: pass
+            if err.errno == 17: pass # file exists - should never happen, but ignore if it does
             else: raise
-    
-    
-
-def makedirshelper(name, mode=0777):
-    """makedirs(path [, mode=0777])
-
-    Super-mkdir; create a leaf directory and all intermediate ones.
-    Works like mkdir, except that any intermediate path segment (not
-    just the rightmost) will be created if it does not exist.  This is
-    recursive.
-    
-    Returns the first dir it had to create
-    """
-    made = None
-    head, tail = os.path.split(name)
-    if not tail:
-        head, tail = os.path.split(head)
-    if head and tail and not os.path.exists(head):
-        try:
-            made = makedirs(head, mode)
-        except OSError, e:
-            # be happy if someone already created the path
-            if e.errno != errno.EEXIST:
-                raise
-        if tail == os.curdir:           # xxx/newdir/. exists if xxx/newdir exists
-            return None
-    os.mkdir(name, mode)
-    if made: return made
-    return name
-    
