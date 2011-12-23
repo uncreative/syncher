@@ -7,11 +7,10 @@ Created by uncreative on 2009-12-31.
 Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 """
 
-import sys, os
+import sys
 import logging
-from externalprocess import getCommandOut, getPipedCommandOut
 import settings
-from util import dryfunc, SyncherException
+from util import SyncherException
 import util
 import accesscontrollist
 import syncdb
@@ -30,57 +29,53 @@ chmod $(stat -f%Mp%Lp "$srcdir") "$dstdir" # Copy the mode bits
 
 
 def unversionthis(filetoversion):
-    try:    
+    try:
         if accesscontrollist.hasacl(filetoversion) and not options.ignoreacl:
             err = "filetoversion has a 'deny' in ACL permissions (ls -lde %s: %s) \n \
             This program is currently not clever enough to check if you have permission to move/delete this file. \n \
             To avoid this problem remove deny permissions from the access control entries \n \
             or rerun this command with --ignoreacl" % (filetoversion, accesscontrollist.getacl(filetoversion))
             raise SyncherException(err)
-        
+
         # TODO: verify that this file is not already added
         logging.info("should: check for dups")
-        
+
         filetoversionpath, repospathofversionedfile, repospathtoputnewfilein = settings.getFileToVersionPathes(filetoversion)
-        
-        syncdb.remove(filetoversionpath)        
-        
+
+        syncdb.remove(filetoversionpath)
+
         util.removesymlink(filetoversionpath)
-        
+
         acl = None
         if options.ignoreacl:
-            acl = removeacl(repospathofversionedfile)
-        
-        util.move(repospathofversionedfile, filetoversionpath)#repospathtoputnewfilein)
+            acl = accesscontrollist.removeacl(repospathofversionedfile)
+
+        util.move(repospathofversionedfile, filetoversionpath)  # repospathtoputnewfilein)
 
         if acl is not None:
             accesscontrollist.setacl(filetoversion, acl)
-    
-        #created = util.makedirs(repospathtoputnewfilein)
-        
 
-            
+        #created = util.makedirs(repospathtoputnewfilein)
     except Exception as e:
         logging.warn("ROLLING BACK because of %s" % e)
         undo.rollback()
         raise
 
 
-
 def main(argv=None):
     global options
-    loglevel=logging.DEBUG #logging.WARNING
+    loglevel=logging.DEBUG  # logging.WARNING
     if argv is None:
         argv = sys.argv[1:]
 
-	options, args = settings.readoptions(argv)
-		
-	for filetoversion in args:
-	    unversionthis(filetoversion)
+    options, args = settings.readoptions(argv)
+
+    for filetoversion in args:
+        unversionthis(filetoversion)
 
 if __name__ == "__main__":
-	sys.exit(main())
-	
-	
-	
+    sys.exit(main())
+
+
+
 

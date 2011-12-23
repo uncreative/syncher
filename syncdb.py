@@ -14,11 +14,9 @@ def remove(filetoversionpath):
         dryfunc(settings.dry, db.write, dbwithfileremoved)
         logging.info("removed %s from db", filetoversionpath)
     undo.push(add, filetoversionpath)
-    
 
 def add(filetoversionpath):
     with open(settings.syncdbpath, 'a') as db:
         dryfunc(settings.dry, db.write, filetoversionpath + os.linesep)
         logging.info("appended %s to db", filetoversionpath)
     undo.push(remove, filetoversionpath)
-    

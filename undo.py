@@ -5,6 +5,7 @@ import os
 undo = []
 isundoing = False
 
+
 def prettyaction(action):
     args = ""
     if len(action) > 1:
@@ -19,19 +20,19 @@ def prettyaction(action):
         return "%s (%s)" % (action[0].__name__, args)
     else:
         return "EMPTY ACTION - this will fail"
-    
+
 
 def pretty():
     actions = []
     for action in undo:
         actions.append(prettyaction(action))
     return os.linesep + os.linesep.join(actions) + os.linesep
-    
-        
+
 
 def push(*kw):
     if not isundoing:
         undo.append(kw)
+
 
 def pop():
     return undo.pop()
@@ -47,10 +48,9 @@ def rollback():
             dothis = pop()
             dothis[0](*dothis[1:])
         logging.info("roll back complete")
-    except Exception as e: 
+    except Exception as e:
         if dothis is not None:
             undo.append(dothis)
         logging.warn("FAILED TO UNDO %s: REMAINING%s" % (e, pretty()))
     finally:
         isundoing = False
-        

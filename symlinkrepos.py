@@ -7,9 +7,9 @@ Created by uncreative on 2009-09-06.
 Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 """
 
-import sys, os, shutil
+import sys
+import os
 import logging
-from optparse import OptionParser
 #from util import dryfunc, SyncherException
 import settings
 import undo
@@ -22,8 +22,9 @@ SYNCHER_DB_FILENAME = "syncher.db"
 #  import itertools, md5
 
 
-
 def makesymlinks(repospath):
+    global options
+
     reposfilepath = os.path.abspath(repospath)
     with open(os.path.join(repospath, SYNCHER_DB_FILENAME)) as db:
         try:
@@ -43,7 +44,7 @@ def makesymlinks(repospath):
                         if os.path.exists(line):
                             if options.ignoreacl:
                                 acl = accesscontrollist.removeacl(line)
-                            util.move(line, line+"-beforesyncher")#repospathtoputnewfilein)
+                            util.move(line, line + "-beforesyncher")  # repospathtoputnewfilein)
                         elif not os.path.exists(os.path.dirname(line)):
                             util.makedirs(os.path.dirname(line))
 
@@ -51,22 +52,25 @@ def makesymlinks(repospath):
                         if acl is not None:
                             accesscontrollist.setacl(line, acl)
                 else:
-                    if not os.path.realpath(line) == reposfilepath + line:
+                    # if not os.path.realpath(line) == reposfilepath + line:
+                    if not os.path.samefile(os.path.realpath(line), reposfilepath + line):
+
                         logging.warn("%s is already a symbolic link to %s not %s. it will not be followed and linked properly to repository" % (line, os.path.realpath(line), reposfilepath + line))
         except Exception as e:
             logging.warn("ROLLING BACK because of %s" % e)
             undo.rollback()
             raise
 
+
 def main(argv=None):
     global options
-    loglevel=logging.DEBUG #logging.WARNING
+    loglevel = logging.DEBUG  # logging.WARNING
     if argv is None:
         argv = sys.argv[1:]
 
-	options, args = settings.readoptions(argv, False)
-	makesymlinks(options.repository)
+    options, args = settings.readoptions(argv, False)
+    makesymlinks(options.repository)
 
 
 if __name__ == "__main__":
-	sys.exit(main())
+    sys.exit(main())

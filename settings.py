@@ -13,14 +13,15 @@ SYNCHER_REPOSITORY = "SYNCHER_REPOSITORY"
 
 
 def getFileToVersionPathes(filetoversion):
-    filetoversionpath = os.path.abspath(filetoversion) 
-    repospathofversionedfile = os.path.join(repospath, filetoversionpath[1:]) # /Users/uncreative/syncher/Users/uncreative/Library/Safari/Bookmarks.plist
+    filetoversionpath = os.path.abspath(filetoversion)
+    repospathofversionedfile = os.path.join(repospath, filetoversionpath[1:])  # /Users/uncreative/syncher/Users/uncreative/Library/Safari/Bookmarks.plist
     repospathtoputnewfilein = os.path.join(repospath, os.path.dirname(filetoversionpath)[1:])
     return filetoversionpath, repospathofversionedfile, repospathtoputnewfilein
- 
+
+
 def readoptions(argv, filearg=True):
     global dry, repospath, reposfilepath, syncdbpath
-    
+
     usage = '''usage: %prog [options] path-to-version'''
     parser = OptionParser(usage=usage)
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=True, help="make lots of noise [default]")
@@ -44,16 +45,12 @@ def readoptions(argv, filearg=True):
     if options.repository is None:
         raise SyncherException("You must set an environment variable SYNCHER_REPOSITORY to path of syncher or use -r to specify the repository path")
 
-
     if filearg and len(args) < 1:
-        raise SyncherException("You must supply one or more files to version")	
+        raise SyncherException("You must supply one or more files to version")
 
     dry = options.dry
     repospath = options.repository
-    reposfilepath = os.path.abspath(repospath) 
+    reposfilepath = os.path.abspath(repospath)
     syncdbpath = os.path.join(repospath, SYNCHER_DB_FILENAME)
-    
 
     return options, args
-
-

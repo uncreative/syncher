@@ -7,12 +7,11 @@ Created by uncreative on 2009-12-31.
 Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 """
 
-import sys, os
+import sys
 import logging
-from externalprocess import getCommandOut, getPipedCommandOut
 import settings
 import util
-from util import dryfunc, SyncherException
+from util import SyncherException
 import accesscontrollist
 import syncdb
 import undo
@@ -30,54 +29,51 @@ chmod $(stat -f%Mp%Lp "$srcdir") "$dstdir" # Copy the mode bits
 
 
 def versionthis(filetoversion):
-    try:    
+    global options
+    try:
         if accesscontrollist.hasacl(filetoversion) and not options.ignoreacl:
             err = "filetoversion has a 'deny' in ACL permissions (ls -lde %s: %s) \n \
             This program is currently not clever enough to check if you have permission to move/delete this file. \n \
             To avoid this problem remove deny permissions from the access control entries \n \
             or rerun this command with --ignoreacl" % (filetoversion, accesscontrollist.getacl(filetoversion))
             raise SyncherException(err)
-        
+
         # TODO: verify that this file is not already added
         logging.info("should: check for dups")
-        
+
         filetoversionpath, repospathofversionedfile, repospathtoputnewfilein = settings.getFileToVersionPathes(filetoversion)
-        
+
         util.makedirs(repospathtoputnewfilein)
-    
+
         acl = None
         if options.ignoreacl:
             acl = accesscontrollist.removeacl(filetoversion)
-        
-        util.move(filetoversionpath, repospathofversionedfile)#repospathtoputnewfilein)
+
+        util.move(filetoversionpath, repospathofversionedfile)  # repospathtoputnewfilein)
 
         if acl is not None:
             accesscontrollist.setacl(repospathofversionedfile, acl)
-    
+
         util.symlink(repospathofversionedfile, filetoversionpath)
-    
-    
+
         syncdb.add(filetoversionpath)
 
-            
     except Exception as e:
         logging.warn("ROLLING BACK because of %s" % e)
         undo.rollback()
         raise
 
 
-
 def main(argv=None):
     global options
-    loglevel=logging.DEBUG #logging.WARNING
+    loglevel = logging.DEBUG  # logging.WARNING
     if argv is None:
         argv = sys.argv[1:]
 
-	options, args = settings.readoptions(argv)
-	
-	
-	for filetoversion in args:
-	    versionthis(filetoversion)
+    options, args = settings.readoptions(argv)
+
+    for filetoversion in args:
+        versionthis(filetoversion)
 
 if __name__ == "__main__":
-	sys.exit(main())
+    sys.exit(main())
