@@ -1,6 +1,7 @@
 import logging
 import types
 import os
+import traceback
 
 undo = []
 isundoing = False
@@ -15,7 +16,7 @@ def prettyaction(action):
                 argsar.append(arg.__name__)
             else:
                 str(argsar.append(arg))
-        args = ",".join(argsar)
+        args = ",".join([str(arg) for arg in argsar])
     if len(action) > 0:
         return "%s (%s)" % (action[0].__name__, args)
     else:
@@ -30,6 +31,8 @@ def pretty():
 
 
 def push(*kw):
+    # logging.debug("pushing %s to undo" % str(kw))
+    # traceback.print_stack()
     if not isundoing:
         undo.append(kw)
 
@@ -41,16 +44,23 @@ def pop():
 def rollback():
     global isundoing
     dothis = None
+    erroredactions = []
     try:
         isundoing = True
         logging.info("undoing: %s" % pretty())
         while len(undo) > 0:
-            dothis = pop()
-            dothis[0](*dothis[1:])
+            try:
+                dothis = pop()
+                dothis[0](*dothis[1:])
+            except Exception as e:
+                # if dothis is not None:
+                #     undo.append(dothis)
+                logging.warn("FAILED TO UNDO %s: REMAINING%s moving on..." % (e, pretty()))
+                erroredactions.append((prettyaction(dothis), e))
         logging.info("roll back complete")
-    except Exception as e:
-        if dothis is not None:
-            undo.append(dothis)
-        logging.warn("FAILED TO UNDO %s: REMAINING%s" % (e, pretty()))
     finally:
         isundoing = False
+    if len(erroredactions) > 0:
+        logging.info("Failed to rollback some items")
+        for erroredaction in erroredactions:
+            print erroredaction[0], erroredaction[1]

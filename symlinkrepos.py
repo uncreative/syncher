@@ -59,6 +59,7 @@ def makesymlinks(repospath):
         except Exception as e:
             logging.warn("ROLLING BACK because of %s" % e)
             undo.rollback()
+            logging.warn("ROLLED BACK because of %s" % e)
             raise
 
 

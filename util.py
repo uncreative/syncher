@@ -40,6 +40,22 @@ def removesymlink(dst):
     except Exception as e:
         logging.warn("Failed to remove symlink %s because %s" % (dst, e))
 
+def removedir(path):
+    try:
+        logging.info("removing dir %s ", path)
+        mode = oct(os.stat(path).st_mode & 0777)
+        os.rmdir(path)
+        undo.push(makedir, path, mode)
+    except Exception as e:
+        logging.warn("Failed to remove dir %s because %s" % (path, e))
+
+def makedir(path, mode):
+    try:
+        logging.info("making dir %s ", path)
+        os.mkdir(path, mode)
+        undo.push(removedir, path)
+    except Exception as e:
+        logging.warn("Failed to make dir %s because %s" % (path, e))
 
 def makedirs(name, mode=0777):
     logging.info("making directories: %s", name)
@@ -58,8 +74,7 @@ def makedirs(name, mode=0777):
 
             while(len(dirs) > 0):
                 makethis = dirs.pop()
-                os.mkdir(makethis, mode)
-                undo.push(os.removedirs, makethis)
+                makedir(makethis, mode)
 
         except OSError, err:
             print repr(err)
@@ -67,3 +82,11 @@ def makedirs(name, mode=0777):
                 pass  # file exists - should never happen, but ignore if it does
             else:
                 raise
+
+def deleteemptydirs(path):
+    if not os.path.isdir(path):
+        return
+    if not os.listdir(path):
+        logging.info("removing empty dir %s ", path)
+        removedir(path)
+        deleteemptydirs(os.path.dirname(path))

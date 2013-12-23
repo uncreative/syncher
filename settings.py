@@ -30,6 +30,7 @@ def readoptions(argv, filearg=True):
     parser.add_option("--dry", dest="dry", action="store_true", default=False, help="do no harm")
     parser.add_option("--ignoreacl", dest="ignoreacl", action="store_true", default=False, help="remove acl permissions before creating symlink")
     parser.add_option("--autocommit", dest="autocommit", action="store_true", default=False, help="commit file to repository after adding to subversion")
+    parser.add_option("--deleteemptydirs", dest="deleteemptydirs", action="store_true", default=False, help="when unsymlinking repos, delete empty directories that had symlinks to them")
     options, args = parser.parse_args(argv)
 
     if options.verbose:
